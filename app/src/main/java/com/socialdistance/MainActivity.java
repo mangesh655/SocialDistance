@@ -1,5 +1,6 @@
 package com.socialdistance;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
@@ -84,6 +85,9 @@ public class MainActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestLocationPermission();
             }
+            else {
+                startBluetoothService();
+            }
 
         }
 
@@ -99,12 +103,15 @@ public class MainActivity extends AppCompatActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         requestLocationPermission();
                     }
+                    else {
+                        startBluetoothService();
+                    }
                 }
             }
         });
     }
 
-    private void StartBluetoothService() {
+    private void startBluetoothService() {
 
         isBluetoothEnabled = bluetoothAdapter.isEnabled();
         if (!isBluetoothEnabled) {
@@ -189,36 +196,39 @@ public class MainActivity extends AppCompatActivity {
      * This uses multiple permission model from dexter
      * On permanent denial opens settings dialog
      */
+
     private void requestLocationPermission() {
-        Dexter.withActivity(this)
-                .withPermissions(
-                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION)
-                .withListener(new MultiplePermissionsListener() {
-                    @Override
-                    public void onPermissionsChecked(MultiplePermissionsReport report) {
-                        // check if all permissions are granted
-                        if (report.areAllPermissionsGranted()) {
-                            // do you work now
-                            StartBluetoothService();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Dexter.withActivity(this)
+                    .withPermissions(
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION)
+                    .withListener(new MultiplePermissionsListener() {
+                        @Override
+                        public void onPermissionsChecked(MultiplePermissionsReport report) {
+                            // check if all permissions are granted
+                            if (report.areAllPermissionsGranted()) {
+                                // do you work now
+                                startBluetoothService();
+                            }
+
+                            showSettingsDialog();
+
+                            /*// check for permanent denial of any permission
+                            if (report.isAnyPermissionPermanentlyDenied()) {
+                                // permission is denied permenantly, navigate user to app settings
+
+                            }*/
                         }
 
-                        showSettingsDialog();
-
-                        /*// check for permanent denial of any permission
-                        if (report.isAnyPermissionPermanentlyDenied()) {
-                            // permission is denied permenantly, navigate user to app settings
-
-                        }*/
-                    }
-
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-                        token.continuePermissionRequest();
-                    }
-                })
-                .onSameThread()
-                .check();
+                        @Override
+                        public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+                            token.continuePermissionRequest();
+                        }
+                    })
+                    .onSameThread()
+                    .check();
+        }
     }
 
     /**
