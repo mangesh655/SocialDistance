@@ -1,0 +1,2 @@
+rootProject.name='Social Distance'
+include ':app'
